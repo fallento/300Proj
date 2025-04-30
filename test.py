@@ -36,12 +36,6 @@ pi = pigpio.pi()
 if not pi.connected:
     raise RuntimeError("Unable to connect to pigpio daemon")
 
-# Initialize motors
-#pi.set_mode(MOTOR_PWM_A, pigpio.OUTPUT)
-#pi.set_mode(MOTOR_PWM_B, pigpio.OUTPUT)
-
-#pi.hardware_PWM(MOTOR_PWM_A, MOTOR_FREQ, DEFAULT_MOTOR_DUTY)
-#pi.hardware_PWM(MOTOR_PWM_B, MOTOR_FREQ, DEFAULT_MOTOR_DUTY)
 logging.info("Motors initialized with hardware PWM at 50% speed.")
 
 # Initialize servos
@@ -89,9 +83,6 @@ if __name__ == "__main__":
         for gpio in SERVOS.values():
             pi.set_servo_pulsewidth(gpio, 0)
 
-        # Stop motors
-        #pi.hardware_PWM(MOTOR_PWM_A, 0, 0)
-        #pi.hardware_PWM(MOTOR_PWM_B, 0, 0)
 
         # Disconnect pigpio
         pi.stop()
