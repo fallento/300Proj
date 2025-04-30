@@ -14,6 +14,11 @@ import pigpio
 import time
 import logging
 
+TARGET_HEADING_DEG = None
+TARGET_DISTANCE_M = None
+HAS_NEW_TARGET = False
+
+
 
 # ---------------- Logging Setup ---------------- #
 logging.basicConfig(
@@ -109,7 +114,7 @@ def ServoClose(command):
     name = (command[5:])
     if name not in SERVOS:
         print("Invalid servo name.")
-    if name == "servo1" or "servo2":
+    if name == "servo1" or name == "servo2":
         angle = 0
     else:
         angle = 10
@@ -119,10 +124,11 @@ def ServoClose(command):
 def allClose():
     for angle in [10]:
                 for name in SERVOS:
-                    if name == "servo1" or "servo2":
+                    if name == "servo1" or name == "servo2":
                         angle = 0
                     set_servo_angle(name, angle)
                 time.sleep(1)  # 1-second delay between moves
+
 #open all
 def allOpen():
     for angle in [180]:
@@ -131,9 +137,38 @@ def allOpen():
                 time.sleep(1)  # 1-second delay between moves
 
 #END OF SERVO SHI
-
+degree = -1
+distance = 0
 # Main Loop
-while True:
+import select
+ready_to_move = False
+
+
+
+while degree == -1 or distance == 0:
+    timeout_seconds=0.1
+    ready = select.select([recv_sock], [], [], timeout_seconds)
+    if ready[0]:
+        data, addr = recv_sock.recvfrom(1024)
+        command = data.decode("utf-8").strip().lower()
+        print(f"Received command: {command}")
+
+        if command[:6] == "degree":
+            degree = int(command[7:])
+        elif command[:8] == "distance":
+            distance = int(command[9:])
+        elif command.startswith("open"):
+            ServoOpen(command)
+        elif command.startswith("close"):
+            ServoClose(command)
+        elif command == "allopen":
+            allOpen()
+        elif command == "allclose":
+            allClose()
+    if degree != -1 and distance != 0:
+        ready_to_move = True
+
+while degree > -1 and distance > 0:
     scan = lidar.polarScan(SCAN_POINTS)
 
     # Filter valid points
@@ -157,7 +192,7 @@ while True:
     print(f"Nearest obstacle: {distance_m:.3f} m at {angle_deg:.2f} degrees")
 
     obstacle_action = None
-
+    
     if distance_m <= STOP_DISTANCE_FRONT_M:
         if -FRONT_ANGLE_RANGE <= angle_deg <= FRONT_ANGLE_RANGE:
             obstacle_action = "reverse_turn"
@@ -169,25 +204,38 @@ while True:
 
         if obstacle_action == "reverse_turn":
             print("Obstacle straight ahead. Reversing and turning.")
-            sc.driveOpenLoop(ik.getPdTargets([-FORWARD_SPEED, -FORWARD_SPEED]))
+            sc.driveOpenLoop(ik.getPdTargets([-FORWARD_SPEED, -FORWARD_SPEED])) # ASSUMING: reverses
             time.sleep(1)
-            sc.driveOpenLoop(ik.getPdTargets([0, 20]))
-
-
-            #sc.driveOpenLoop(ik.getPdTargets([0, 5]))
+            sc.driveOpenLoop(ik.getPdTargets([0, 20])) # ASUSMING: turns
             time.sleep(0.5)
 
     else:
         # No obstacle detected, drive forward
         print("No obstacle detected.")
         wheel_speeds = ik.getPdTargets([FORWARD_SPEED, 0])
+        """
+        Move the robot in a given direction (degrees) for a given distance (meters).
+        """
+        radians = math.radians(degree)
+        # Calculate X and Y motion components
+        x = math.cos(radians) * FORWARD_SPEED
+        y = math.sin(radians) * FORWARD_SPEED
+
+        # Compute wheel speeds
+        wheel_speeds = ik.getPdTargets([x, y])
+        duration = distance / FORWARD_SPEED  # time = distance / speed
+
+        logging.info(f"Moving to {distance}m at {degree}° (for {duration:.2f}s)")
         sc.driveOpenLoop(wheel_speeds)
-    
+        time.sleep(duration)
+        sc.driveOpenLoop([0, 0])
+        logging.info("Movement complete.")
+
     try:
         data, addr = recv_sock.recvfrom(1024)
         command = data.decode("utf-8").strip().lower()
         print(f"Received command: {command}")
-    
+
         if command[:4] == "open":
             ServoOpen(command)
         elif command[:5] == "close":
@@ -196,6 +244,7 @@ while True:
             allOpen()
         elif command == "allclose":
             allClose()
+        
     except BlockingIOError:
         pass  # No message received, continue loop
 
