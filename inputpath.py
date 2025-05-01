@@ -11,8 +11,8 @@ from time import sleep
 hold_deg = True
 hold_dist = True
 # Constants
-STOP_DISTANCE_FRONT_M = 0.75     # ⬅ updated threshold
-FRONT_ANGLE_RANGE = 15           # degrees
+STOP_DISTANCE_FRONT_M = 1     # ⬅ updated threshold
+FRONT_ANGLE_RANGE = 45           # degrees
 FORWARD_SPEED = 0.3              # path speed
 SCAN_POINTS = 100
 
@@ -80,8 +80,19 @@ import select
 motions=[]
 def set_polar_cord(degree,distance):
     global motions
+    if degree > 45:
+        if degree > 170:
+            degree = degree-40
+        else:
+            degree = degree-20
+        
+    if degree <-45:
+        if degree <-170:
+            degree = degree+40
+        else:
+            degree = degree+20
     angle_rad = math.radians(degree)
-    turn_speed = 0.5  # rad/s (adjust based on your robot's ability)
+    turn_speed = 0.75  # rad/s (adjust based on your robot's ability)
     turn_time = round(abs(angle_rad) / turn_speed, 2)
     turn_direction = math.copysign(turn_speed, angle_rad)
 
@@ -168,6 +179,26 @@ def execute(motions):
                 # Reverse and turn
                 sc.driveOpenLoop(ik.getPdTargets([-FORWARD_SPEED, 0]))
                 sleep(1)
+                sc.driveOpenLoop(ik.getPdTargets([0, 5]))
+                sleep(0.5)
+                sc.driveOpenLoop(ik.getPdTargets([(FORWARD_SPEED),0]))
+                sleep(1.5)
+                sc.driveOpenLoop(ik.getPdTargets([0, -5]))
+                sleep(0.5)
+                sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
+                sleep(0.5)
+                #sc.driveOpenLoop(ik.getPdTargets([0, -5]))
+                #sleep(0.5)
+                sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
+                sleep(1.5)
+                sc.driveOpenLoop(ik.getPdTargets([0, -5]))
+                sleep(0.5)
+                sc.driveOpenLoop(ik.getPdTargets([(FORWARD_SPEED),0]))
+                sleep(1.5)
+                sc.driveOpenLoop(ik.getPdTargets([0, 5]))
+                sleep(0.45)
+                #sc.driveOpenLoop(ik.getPdTargets([-FORWARD_SPEED, 0]))
+                #sleep(1)
                 #sc.driveOpenLoop(ik.getPdTargets([0, 0.5]))
                 #sleep(0.5)
 
