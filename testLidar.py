@@ -9,7 +9,7 @@ import logging
 from time import sleep
 
 # Constants
-STOP_DISTANCE_FRONT_M = 0.75     # ⬅ updated threshold
+STOP_DISTANCE_FRONT_M = 1.5     # ⬅ updated threshold
 FRONT_ANGLE_RANGE = 15           # degrees
 FORWARD_SPEED = 0.3              # path speed
 SCAN_POINTS = 100
@@ -75,14 +75,14 @@ recv_sock.setblocking(False)
 # Path motions
 motions = [
     [0.3, 0.0, 2],
-    [0.0, 0.785, 2],
-    [0.3, 0.0, 2],
-    [0.0, 0.785, 2],
-    [0.3, 0.0, 2],
-    [0.0, -0.788, 2],
-    [0.3, 0.0, 2],
-    [0.0, -0.788, 2],
-    [0.3, 0.0, 2],
+    #[0.0, 0.5, 2],
+    [0.0, 0.0, 0.0],
+    #[0.0, 0.5, 2],
+    #[0.3, 0.0, 2],
+    #[0.0, -0.5, 2],
+    #[0.3, 0.0, 2],
+    #[0.0, -0.5, 2],
+    #[0.3, 0.0, 2],
 ]
 
 def check_for_obstacle():
@@ -114,8 +114,19 @@ for count, motion in enumerate(motions):
             # Reverse and turn
             sc.driveOpenLoop(ik.getPdTargets([-FORWARD_SPEED, 0]))
             sleep(1)
-            #sc.driveOpenLoop(ik.getPdTargets([0, 0.5]))
+            sc.driveOpenLoop(ik.getPdTargets([0, 5]))
+            sleep(0.5)
+            sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
+            sleep(0.5)
+            sc.driveOpenLoop(ik.getPdTargets([0, -5]))
+            sleep(0.5)
+            sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
+            sleep(0.5)
+            #sc.driveOpenLoop(ik.getPdTargets([0, -5]))
             #sleep(0.5)
+            sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
+            sleep(0.5)
+
 
             # Wait until clear
             print("Waiting for obstacle to clear...")
