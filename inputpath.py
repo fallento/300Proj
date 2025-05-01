@@ -93,14 +93,15 @@ def set_polar_cord(degree,distance):
             degree = degree+20
     angle_rad = math.radians(degree)
     turn_speed = 0.75  # rad/s (adjust based on your robot's ability)
+    forward_speed = 0.5
     turn_time = round(abs(angle_rad) / turn_speed, 2)
     turn_direction = math.copysign(turn_speed, angle_rad)
 
-    forward_speed = round(distance / 4, 2)  # keep this
+    forward_time = round((distance*2), 2)  # keep this
 
     motions = [
         [0.0, turn_direction, turn_time],  # angular motion
-        [forward_speed, 0.0, 4]            # forward motion
+        [forward_speed, 0.0, forward_time]            # forward motion
     ]
 def check():
     global hold_deg, hold_dist, degree, distance
@@ -118,6 +119,8 @@ def check():
             elif command.startswith("distance:"):
                 distance = int(command[9:])
                 print(f"Received command: {distance}")
+                if distance != 0:
+                    distance = distance -0.75
                 hold_dist = False
             elif command.startswith("open"):
                 ServoOpen(command)
@@ -179,23 +182,23 @@ def execute(motions):
                 # Reverse and turn
                 sc.driveOpenLoop(ik.getPdTargets([-FORWARD_SPEED, 0]))
                 sleep(1)
-                sc.driveOpenLoop(ik.getPdTargets([0, 5]))
+                sc.driveOpenLoop(ik.getPdTargets([0, 10]))
                 sleep(0.5)
                 sc.driveOpenLoop(ik.getPdTargets([(FORWARD_SPEED),0]))
-                sleep(1.5)
-                sc.driveOpenLoop(ik.getPdTargets([0, -5]))
+                sleep(2)
+                sc.driveOpenLoop(ik.getPdTargets([0, -10]))
                 sleep(0.5)
                 sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
                 sleep(0.5)
-                #sc.driveOpenLoop(ik.getPdTargets([0, -5]))
+                #sc.driveOpenLoop(ik.getPdTargets([0, -10]))
                 #sleep(0.5)
                 sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
-                sleep(1.5)
-                sc.driveOpenLoop(ik.getPdTargets([0, -5]))
+                sleep(2)
+                sc.driveOpenLoop(ik.getPdTargets([0, -10]))
                 sleep(0.5)
                 sc.driveOpenLoop(ik.getPdTargets([(FORWARD_SPEED),0]))
-                sleep(1.5)
-                sc.driveOpenLoop(ik.getPdTargets([0, 5]))
+                sleep(2)
+                sc.driveOpenLoop(ik.getPdTargets([0, 10]))
                 sleep(0.45)
                 #sc.driveOpenLoop(ik.getPdTargets([-FORWARD_SPEED, 0]))
                 #sleep(1)
@@ -209,9 +212,10 @@ def execute(motions):
 
                 print("Path clear. Resuming motion.")
                 sc.driveOpenLoop(wheel_speeds)
-            else:
-                sleep(step)
-                sleep_time += step
+            
+            sleep(step)
+            sleep_time += step
+            print(f"sleep time {sleep_time}")
     # Stop after motions
     sc.driveOpenLoop([0, 0])
     print("All motions complete. Waiting for servo commands...")
