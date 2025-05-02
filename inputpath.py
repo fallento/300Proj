@@ -164,6 +164,7 @@ def check_for_obstacle():
 
 # Execute motions
 def execute(motions):
+    no_object_detected = True
     for count, motion in enumerate(motions):
         print(f"Starting Motion {count+1}")
         remaining_time = motion[2]
@@ -204,7 +205,7 @@ def execute(motions):
                 #sleep(1)
                 #sc.driveOpenLoop(ik.getPdTargets([0, 0.5]))
                 #sleep(0.5)
-
+                no_object_detected = False
                 # Wait until clear
                 print("Waiting for obstacle to clear...")
                 while check_for_obstacle():
@@ -216,6 +217,11 @@ def execute(motions):
             sleep(step)
             sleep_time += step
             print(f"sleep time {sleep_time}")
+    if no_object_detected == True:
+        print("no object detected")
+        sc.driveOpenLoop(ik.getPdTargets([FORWARD_SPEED,0]))
+        sleep(2.5)
+
     # Stop after motions
     sc.driveOpenLoop([0, 0])
     print("All motions complete. Waiting for servo commands...")
